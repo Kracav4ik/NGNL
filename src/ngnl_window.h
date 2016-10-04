@@ -12,79 +12,6 @@
 
 const int DEFAULT_ANIM_INTERVAL = 200;
 
-template<typename T>
-class UndoRedo {
-private:
-    std::vector<T> diff;
-    int currentDiff;
-    int maxCurrentDiff;
-    int savedAtDiff;
-    static const int OUTSIDE = -1;
-
-public:
-    UndoRedo() {
-        initial_set();
-    }
-
-    void initial_set() {
-        diff.clear();
-        currentDiff = OUTSIDE;
-        maxCurrentDiff = OUTSIDE;
-        savedAtDiff = OUTSIDE;
-    }
-
-    bool can_undo() const { return !diff.empty() && currentDiff > 0; }
-
-    bool can_redo() const { return !diff.empty() && currentDiff < maxCurrentDiff; }
-
-    bool has_changes() const {
-        if (currentDiff == OUTSIDE || savedAtDiff == OUTSIDE) {
-            return currentDiff != savedAtDiff;
-        }
-        return diff[currentDiff] != diff[savedAtDiff];
-    }
-
-    void push_value(const T& value) {
-        currentDiff++;
-
-        if (currentDiff >= diff.size()) {
-            diff.resize(2 * diff.size() + 10);
-        }
-
-        diff[currentDiff] = value;
-        if (savedAtDiff >= currentDiff) {
-            savedAtDiff = OUTSIDE;
-        }
-        maxCurrentDiff = currentDiff;
-    }
-
-    const T& do_undo() {
-        if (!can_undo()) {
-            log("** error at undo\n");
-        }
-        currentDiff--;
-
-        return peek_value();
-    }
-
-    const T& do_redo() {
-        if (!can_redo()) {
-            log("** error at redo\n");
-        }
-        currentDiff++;
-
-        return peek_value();
-    }
-
-    const T& peek_value() {
-        return diff[currentDiff];
-    }
-
-    void notify_saved() {
-        savedAtDiff = currentDiff;
-    }
-};
-
 class NGNLWindow : public QMainWindow, private Ui::NGNLWindow {
 Q_OBJECT
 private:
@@ -103,20 +30,19 @@ public:
             animRuning(false),
             grid(10, 50, 50, 15, 15)
     {
-/*
         setupUi(this);
 
         animTimer.setInterval(DEFAULT_ANIM_INTERVAL);
-
-        load_anims();
-        grid._showBg = showBg->isChecked();
-        grid._showTex = showTex->isChecked();
-        grid._showBaseline = showBaseline->isChecked();
-        grid._showHitbox = showHitbox->isChecked();
+//
+//        load_anims();
+//        grid._showBg = showBg->isChecked();
+//        grid._showTex = showTex->isChecked();
+//        grid._showBaseline = showBaseline->isChecked();
+//        grid._showHitbox = showHitbox->isChecked();
 
         scene.addItem(&grid);
         graphicsView->setScene(&scene);
- */
+
         connect(&animTimer, SIGNAL(timeout()), this, SLOT(anim_step()));
 
         show();
@@ -167,20 +93,22 @@ public slots:
 
     void on_startAnimation_toggled(bool checked) {
         if (checked) {
-//            startAnimation->setText("Stop");
+            startAnimation->setText("Stop");
             animTimer.start();
         } else {
-//            startAnimation->setText("Start");
+            startAnimation->setText("Start");
             animTimer.stop();
         }
     }
 
-//    void anim_step() {
+    void anim_step() {
 //        if (!animInfo.empty()) {
 //            frameNumber->setValue((frameNumber->value() + 1) % animInfo._frames.size());
 //        }
-//    }
-//
+        int m =  printf("1234\n");
+        printf("m = %d\n",m);
+    }
+
 //    void on_saveFrame_clicked() {
 //        animInfo.save(FilePath(path.toUtf8().constData()));
 //        undoRedo.notify_saved();

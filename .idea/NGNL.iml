@@ -19,8 +19,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src/utils.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/ngnl.ui" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/ngnl_window.h" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/src/utils.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/debug.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/background_grid.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/utils.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/background_grid.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/ngnl_window.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
     </content>

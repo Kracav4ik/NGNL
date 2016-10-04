@@ -17,7 +17,18 @@ find_package(Qt5Widgets REQUIRED)
 
 set(EXE_NAME "ngnl")
 
-set(EXE_SOURCES src/utils.cpp src/utils.h src/debug.cpp src/debug.h src/ngnl_main.cpp src/ngnl_window.h src/ngnl_window.cpp src/ngnl.ui)
+set(EXE_SOURCES
+        src/background_grid.cpp
+        src/background_grid.h
+        src/utils.cpp
+        src/utils.h
+        src/debug.cpp
+        src/debug.h
+        src/ngnl_main.cpp
+        src/ngnl_window.h
+        src/ngnl_window.cpp
+        src/ngnl.ui
+        )
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 

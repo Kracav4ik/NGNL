@@ -2,59 +2,96 @@
 
 #include <QGraphicsItem>
 #include <QPainter>
+#include <Vector>
+using namespace std;
+template<typename T>
+class Matrix {
+    vector<vector<T>> data;
+public:
+    const int width;
+    const int height;
+
+    Matrix(int w, int h)
+    :
+    data((unsigned int)w,vector<T>((unsigned int)h)),
+    width(w),
+    height(h)
+    {}
+
+    void set(int x, int y, const T& value)  {
+        data[x][y] = value;
+    }
+
+    T get(int x, int y) const {
+        return data[x][y];
+    }
+};
+
 
 class BackgroundGrid : public QGraphicsItem {
 private:
     int _cellSize;
-    int _cellCountHor;
-    int _cellCountVert;
     int _globalOffsetX;
     int _globalOffsetY;
     int _frameIdx;
+    Matrix<bool> grid;
 public:
     bool _showBg;
     bool _showTex;
     bool _showBaseline;
     bool _showHitbox;
 
-    explicit BackgroundGrid(int cellSize, int cellCountGor, int cellCountVert, int globalOffsetX, int globalOffsetY) :
+    explicit BackgroundGrid(int cellSize, int cellCountHor, int cellCountVert, int globalOffsetX, int globalOffsetY) :
             _cellSize(cellSize),
-            _cellCountHor(cellCountGor),
-            _cellCountVert(cellCountVert),
             _globalOffsetX(globalOffsetX),
             _globalOffsetY(globalOffsetY),
             _frameIdx(0),
+            grid(cellCountHor, cellCountVert),
             _showBg(false),
             _showTex(false),
             _showBaseline(false),
             _showHitbox(false)
-    {}
-
-    QRectF boundingRect() const override {
-        return QRectF(0, 0, _cellSize * _cellCountHor + 1, _cellSize * _cellCountVert + 1);
+    {
+        grid.set(10, 16, true);
+        grid.set(20, 16, true);
+        for (int i = 11; i <= 19; ++i) {
+            grid.set(i, 24, true);
+        }
+        for (int i = 8; i <= 22; ++i) {
+            grid.set(i, 13, true);
+            grid.set(i, 26, true);
+        }
+        for (int j = 14; j <= 25; ++j) {
+            grid.set(7, j, true);
+            grid.set(23, j, true);
+        }
     }
 
-//    void _paintPixel(QPainter* painter, int frameX, int frameY, const Color& c) const {
-//        Uint8 alpha = c.a;
-//        if(_showBg){
-//            alpha = 255;
-//        }
-//        painter->setBrush(QColor(c.r, c.g, c.b, alpha));
-//        painter->drawRect(_cellSize * frameX, _cellSize * frameY, _cellSize, _cellSize);
-//    }
+    QRectF boundingRect() const override {
+        return QRectF(0, 0, _cellSize * grid.width + 1, _cellSize * grid.height + 1);
+    }
 
-    void _paintImagePixel(QPainter* painter, int frameX, int frameY, unsigned int pixX, unsigned int pixY) const {
-//        if (pixX < 0 || pixY < 0 || pixX >= _image->getSize().x || pixY >= _image->getSize().y){
-//            return;
-//        }
-//        const Color& c = _image->getPixel(pixX, pixY);
-//        _paintPixel(painter, frameX, frameY, c);
+    void _paintPixel(QPainter* painter, int frameX, int frameY, const QColor& c) const {
+        int alpha = c.alpha();
+        if(_showBg){
+            alpha = 255;
+        }
+        painter->setBrush(QColor(c.red(), c.green(), c.blue(), alpha));
+        painter->drawRect(_cellSize * frameX, _cellSize * frameY, _cellSize, _cellSize);
     }
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override {
         painter->setPen(Qt::NoPen);
         painter->setBrush(QBrush(Qt::darkCyan, Qt::Dense5Pattern));
         painter->drawRect(boundingRect());
+
+        for(int x = 0; x < grid.width; ++x){
+            for(int y = 0; y < grid.height; ++y){
+                if (grid.get(x, y)){
+                    _paintPixel(painter, x, y, Qt::black);
+                }
+            }
+        }
 
         if(false){
 //            const Frame& _frame = (*_frames)[_frameIdx];
@@ -84,13 +121,13 @@ public:
         }
 
         painter->setPen(Qt::black);
-        for (int i = 0; i <= _cellCountVert; i++) {
+        for (int i = 0; i <= grid.height; i++) {
             int offset_y = _cellSize * i;
-            painter->drawLine(0, offset_y, _cellSize * _cellCountHor, offset_y);
+            painter->drawLine(0, offset_y, _cellSize * grid.width, offset_y);
         }
-        for (int i = 0; i <= _cellCountHor; i++) {
+        for (int i = 0; i <= grid.width; i++) {
             int offset_x = _cellSize * i;
-            painter->drawLine(offset_x, 0, offset_x, _cellSize * _cellCountVert);
+            painter->drawLine(offset_x, 0, offset_x, _cellSize * grid.height);
         }
 
 //        if(_frames && _image){
