@@ -105,8 +105,7 @@ public slots:
 //        if (!animInfo.empty()) {
 //            frameNumber->setValue((frameNumber->value() + 1) % animInfo._frames.size());
 //        }
-        int m =  printf("1234\n");
-        printf("m = %d\n",m);
+        grid.life_step();
     }
 
 //    void on_saveFrame_clicked() {

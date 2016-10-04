@@ -3,22 +3,23 @@
 #include <QGraphicsItem>
 #include <QPainter>
 #include <Vector>
+
 using namespace std;
+
 template<typename T>
 class Matrix {
     vector<vector<T>> data;
 public:
-    const int width;
-    const int height;
+    int width;
+    int height;
 
     Matrix(int w, int h)
-    :
-    data((unsigned int)w,vector<T>((unsigned int)h)),
-    width(w),
-    height(h)
-    {}
+            :
+            data((unsigned int) w, vector<T>((unsigned int) h)),
+            width(w),
+            height(h) {}
 
-    void set(int x, int y, const T& value)  {
+    void set(int x, int y, const T& value) {
         data[x][y] = value;
     }
 
@@ -50,8 +51,7 @@ public:
             _showBg(false),
             _showTex(false),
             _showBaseline(false),
-            _showHitbox(false)
-    {
+            _showHitbox(false) {
         grid.set(10, 16, true);
         grid.set(20, 16, true);
         for (int i = 11; i <= 19; ++i) {
@@ -71,9 +71,43 @@ public:
         return QRectF(0, 0, _cellSize * grid.width + 1, _cellSize * grid.height + 1);
     }
 
+    static int alive_count(int x, int y, const Matrix<bool>& grid) {
+        int result = 0;
+        for (int i = x - 1; i <= x + 1; ++i) {
+            for (int j = y - 1; j <= y + 1; ++j) {
+                if ((i >= 0 && i < grid.width) && (j >= 0 && j < grid.height) && !(y == j && x == i)) {
+                    if (grid.get(i, j)) {
+                        result++;
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    void life_step() {
+        Matrix<bool> new_grid(grid.width, grid.height);
+        for (int x = 0; x < grid.width; ++x) {
+            for (int y = 0; y < grid.height; ++y) {
+                int count = alive_count(x, y, grid);
+                if (grid.get(x, y)) {
+                    if (count == 3 || count == 2) {
+                        new_grid.set(x, y, true);
+                    }
+                } else {
+                    if (count == 3) {
+                        new_grid.set(x, y, true);
+                    }
+                }
+            }
+        }
+        grid = new_grid;
+        update();
+    }
+
     void _paintPixel(QPainter* painter, int frameX, int frameY, const QColor& c) const {
         int alpha = c.alpha();
-        if(_showBg){
+        if (_showBg) {
             alpha = 255;
         }
         painter->setBrush(QColor(c.red(), c.green(), c.blue(), alpha));
@@ -85,15 +119,15 @@ public:
         painter->setBrush(QBrush(Qt::darkCyan, Qt::Dense5Pattern));
         painter->drawRect(boundingRect());
 
-        for(int x = 0; x < grid.width; ++x){
-            for(int y = 0; y < grid.height; ++y){
-                if (grid.get(x, y)){
+        for (int x = 0; x < grid.width; ++x) {
+            for (int y = 0; y < grid.height; ++y) {
+                if (grid.get(x, y)) {
                     _paintPixel(painter, x, y, Qt::black);
                 }
             }
         }
 
-        if(false){
+        if (false) {
 //            const Frame& _frame = (*_frames)[_frameIdx];
 //            if (_showTex) {
 //                for (unsigned int frameX = 0; frameX < _cellCountVert; frameX++) {
