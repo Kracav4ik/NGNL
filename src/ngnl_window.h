@@ -5,6 +5,7 @@
 #include <QDir>
 #include <QGraphicsTextItem>
 #include <QTimer>
+#include <QFileDialog>
 
 #include "ui_ngnl.h"
 #include "debug.h"
@@ -91,6 +92,18 @@ public slots:
         animRuning = checked;
     }
 
+    void on_loadImage_clicked() {
+        QString fileName = QFileDialog::getOpenFileName(this, "Select image", QString(), "Images (*.png *.jpg *.jpeg);;All files (*.*)");
+        if(fileName.isNull()){
+            return;
+        }
+        QImage image;
+        if(image.load(fileName)){
+            grid.load_image(image);
+        }
+
+    }
+
     void on_startAnimation_toggled(bool checked) {
         if (checked) {
             startAnimation->setText("Stop");
@@ -105,7 +118,7 @@ public slots:
 //        if (!animInfo.empty()) {
 //            frameNumber->setValue((frameNumber->value() + 1) % animInfo._frames.size());
 //        }
-        grid.life_step();
+        grid.timer_step();
     }
 
 //    void on_saveFrame_clicked() {

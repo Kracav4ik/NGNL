@@ -6,6 +6,19 @@
 
 using namespace std;
 
+class BitMatrix {
+public:
+    virtual int width() const = 0;
+
+    virtual int height() const = 0;
+
+    virtual bool get(int x, int y) const = 0;
+
+    virtual void set(int x, int y, bool value) = 0;
+
+    virtual ~BitMatrix() {}
+};
+
 template<typename T>
 class Matrix {
     vector<vector<T>> data;
@@ -28,6 +41,39 @@ public:
     }
 };
 
+class ColorBitMatrix : public BitMatrix {
+private:
+    int bit_number;
+    Matrix<QColor>& matrix;
+public:
+    ColorBitMatrix(Matrix<QColor>& m, int bit_num) :
+            matrix(m),
+            bit_number(bit_num) {}
+
+    int width() const {
+        return matrix.width;
+    }
+
+    int height() const {
+        return matrix.height;
+    }
+
+    bool get(int x, int y) const {
+        QRgb rgba = matrix.get(x, y).rgba();
+        return ((1 << bit_number) & rgba) != 0;
+    }
+
+    void set(int x, int y, bool value) {
+        QRgb rgba = matrix.get(x, y).rgba();
+        if (value) {
+            rgba |= 1 << bit_number;
+        } else {
+            rgba &= ~(1 << bit_number);
+        }
+        matrix.set(x, y, rgba);
+    }
+};
+
 
 class BackgroundGrid : public QGraphicsItem {
 private:
@@ -35,7 +81,7 @@ private:
     int _globalOffsetX;
     int _globalOffsetY;
     int _frameIdx;
-    Matrix<bool> grid;
+    Matrix<QColor> grid;
 public:
     bool _showBg;
     bool _showTex;
@@ -51,31 +97,17 @@ public:
             _showBg(false),
             _showTex(false),
             _showBaseline(false),
-            _showHitbox(false) {
-        grid.set(10, 16, true);
-        grid.set(20, 16, true);
-        for (int i = 11; i <= 19; ++i) {
-            grid.set(i, 24, true);
-        }
-        for (int i = 8; i <= 22; ++i) {
-            grid.set(i, 13, true);
-            grid.set(i, 26, true);
-        }
-        for (int j = 14; j <= 25; ++j) {
-            grid.set(7, j, true);
-            grid.set(23, j, true);
-        }
-    }
+            _showHitbox(false) {}
 
     QRectF boundingRect() const override {
         return QRectF(0, 0, _cellSize * grid.width + 1, _cellSize * grid.height + 1);
     }
 
-    static int alive_count(int x, int y, const Matrix<bool>& grid) {
+    static int alive_count(int x, int y, const BitMatrix& grid) {
         int result = 0;
         for (int i = x - 1; i <= x + 1; ++i) {
             for (int j = y - 1; j <= y + 1; ++j) {
-                if ((i >= 0 && i < grid.width) && (j >= 0 && j < grid.height) && !(y == j && x == i)) {
+                if ((i >= 0 && i < grid.width()) && (j >= 0 && j < grid.height()) && !(y == j && x == i)) {
                     if (grid.get(i, j)) {
                         result++;
                     }
@@ -85,10 +117,10 @@ public:
         return result;
     }
 
-    void life_step() {
-        Matrix<bool> new_grid(grid.width, grid.height);
-        for (int x = 0; x < grid.width; ++x) {
-            for (int y = 0; y < grid.height; ++y) {
+    static void life_step(BitMatrix& grid) {
+        Matrix<bool> new_grid(grid.width(), grid.height());
+        for (int x = 0; x < grid.width(); ++x) {
+            for (int y = 0; y < grid.height(); ++y) {
                 int count = alive_count(x, y, grid);
                 if (grid.get(x, y)) {
                     if (count == 3 || count == 2) {
@@ -101,7 +133,18 @@ public:
                 }
             }
         }
-        grid = new_grid;
+        for (int x = 0; x < grid.width(); ++x) {
+            for (int y = 0; y < grid.height(); ++y) {
+                grid.set(x, y, new_grid.get(x, y));
+            }
+        }
+    }
+
+    void timer_step() {
+        for(int i = 0; i < 32; ++i){
+            ColorBitMatrix bit_matrix(grid, i);
+            life_step(bit_matrix);
+        }
         update();
     }
 
@@ -114,6 +157,15 @@ public:
         painter->drawRect(_cellSize * frameX, _cellSize * frameY, _cellSize, _cellSize);
     }
 
+    void load_image(const QImage& image) {
+        for (int i = 0; i < grid.width; ++i) {
+            for (int j = 0; j < grid.height; ++j) {
+                grid.set(i, j, image.pixelColor(i + 200, j + 150));
+            }
+        }
+        update();
+    }
+
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override {
         painter->setPen(Qt::NoPen);
         painter->setBrush(QBrush(Qt::darkCyan, Qt::Dense5Pattern));
@@ -121,9 +173,7 @@ public:
 
         for (int x = 0; x < grid.width; ++x) {
             for (int y = 0; y < grid.height; ++y) {
-                if (grid.get(x, y)) {
-                    _paintPixel(painter, x, y, Qt::black);
-                }
+                _paintPixel(painter, x, y, grid.get(x, y));
             }
         }
 
